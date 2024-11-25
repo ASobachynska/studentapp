@@ -9,6 +9,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  FirebaseAuth.instance.setLanguageCode('uk'); // Для української мови
+
   runApp(const StudentApp());
 }
 
@@ -32,9 +35,9 @@ class StudentApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: AppColors.primary,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: AppColors.scaffoldBackground[100],
+        scaffoldBackgroundColor: AppColors.scaffoldBackground.shade200,
         appBarTheme: AppBarTheme(
-          backgroundColor: AppColors.appBarBackground[700],
+          backgroundColor: AppColors.appBarBackground,
           titleTextStyle: const TextStyle(
             color: AppColors.iconColor,
             fontSize: 20,
@@ -60,9 +63,9 @@ class StudentApp extends StatelessWidget {
         ),
         textTheme: TextTheme(
           bodyLarge: TextStyle(color: Colors.grey[800], fontSize: 16),
-          bodyMedium: TextStyle(color: AppColors.textSecondary[700]),
-          titleLarge: TextStyle(
-            color: AppColors.textPrimary[800],
+          bodyMedium: TextStyle(color: AppColors.textSecondary),
+          titleLarge: const TextStyle(
+            color: AppColors.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -74,35 +77,67 @@ class StudentApp extends StatelessWidget {
 }
 
 class StudentInfo {
-  final String specialty;
-  final String level;
+  // final String specialty;
+  // final String level;
   final int course;
 
-  StudentInfo({required this.specialty, required this.level, required this.course});
+  // StudentInfo({required this.specialty, required this.level, required this.course});
+   StudentInfo({ required this.course});
+  // StudentInfo({required this.specialty, required this.level});
 }
+
 
 StudentInfo? parseStudentEmail(String email) {
+  // Перевіряємо лише домен
   if (!email.endsWith('@kpnu.edu.ua')) {
-    return null;
+    return null; // Email не відповідає домену університету
   }
 
-  final parts = email.split('@')[0].split('.');
-  if (parts.length < 2) return null;
-
-  final groupCode = parts[0];
-  final specialtyCode = groupCode.substring(0, 2);
-  String specialty = (specialtyCode == 'kn') ? 'Комп\'ютерні науки' : 'Невідома спеціальність';
-
-  final levelCode = groupCode[2];
-  String level = (levelCode == 'b') ? 'Бакалавр' : 'Магістр';
-  int maxYears = (levelCode == 'b') ? 4 : 2;
-
-  final year = int.parse('20${groupCode.substring(3, 5)}');
-  final currentYear = DateTime.now().year;
-  final course = (currentYear - year + 1).clamp(1, maxYears);
-
-  return StudentInfo(specialty: specialty, level: level, course: course);
+  // Повертаємо порожній об'єкт StudentInfo, якщо перевірка пройдена
+  // return StudentInfo(specialty: '', level: '', course: 0);
+    return StudentInfo(course: 0);
 }
+
+// StudentInfo? parseStudentEmail(String email) {
+//   if (!email.endsWith('@kpnu.edu.ua')) {
+//     return null;
+//   }
+
+//   final parts = email.split('@')[0].split('.');
+//   if (parts.length < 2) return null;
+
+//   final groupCode = parts[0];
+//  if (groupCode.length < 5) return null; 
+
+//   final specialtyCode = groupCode.substring(0, 2);
+//   String specialty = (specialtyCode == 'kn') ? 'Комп\'ютерні науки' : 'Невідома спеціальність';
+
+//   final levelCode = groupCode[2];
+//   String level = (levelCode == 'b') ? 'Бакалавр' : 'Магістр';
+//   int maxYears = (levelCode == 'b') ? 4 : 2;
+
+
+//   final yearString = groupCode.substring(3, 5);
+//   if (yearString.length != 2 || int.tryParse(yearString) == null) {
+//     return null; // Якщо не валідний рік
+//   }
+
+//   final year = int.parse('20${groupCode.substring(3, 5)}'); // Не перевіряємо на валідність
+//   final currentYear = DateTime.now().year;
+//   final course = (currentYear - year + 1).clamp(1, maxYears);
+
+//   return StudentInfo(specialty: specialty, level: level, course: course);
+// }
+
+// StudentInfo? parseStudentEmail(String email) {
+//   if (!email.endsWith('@kpnu.edu.ua')) {
+//     return null; // Email не відповідає домену університету
+//   }
+
+//   // Якщо перевірка пройдена, повертаємо порожній об'єкт або обробляємо далі за потреби
+//   return StudentInfo(specialty: '', level: '', course: 0);
+// }
+
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -189,12 +224,38 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 }
-
 class MainPage extends StatelessWidget {
   final String groupCode;
   final StudentInfo studentInfo;
 
   const MainPage({super.key, required this.groupCode, required this.studentInfo});
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        await user.delete(); // Видалення користувача
+        
+        await GoogleSignIn().signOut(); // Вихід із Google
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Акаунт успішно видалено')),
+        );
+
+        // Повернення на екран авторизації
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const SignInScreen()),
+          (route) => false,
+        );
+      }
+    } catch (error) {
+      // Обробка помилок, наприклад, якщо потрібно знову увійти перед видаленням
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Помилка: $error')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -205,9 +266,14 @@ class MainPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Група: $groupCode'),
-            Text('Спеціальність: ${studentInfo.specialty}'),
-            Text('Рівень: ${studentInfo.level}'),
+            // Text('Спеціальність: ${studentInfo.specialty}'),
+            // Text('Рівень: ${studentInfo.level}'),
             Text('Курс: ${studentInfo.course}'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => _deleteAccount(context),
+              child: const Text('Видалити акаунт'),
+            ),
           ],
         ),
       ),

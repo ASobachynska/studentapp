@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="studentapp">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>studentapp</title>
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="google-signin-client_id" content="YOUR_GOOGLE_CLIENT_ID">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.1/firebase-firestore.js"></script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+  
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+  apiKey: "AIzaSyAOiQg6Ztiyxgrfeh6QbqS9_Ot658tqlgI",
+  authDomain: "studentapp-eef05.firebaseapp.com",
+  projectId: "studentapp-eef05",
+  storageBucket: "studentapp-eef05.firebasestorage.app",
+  messagingSenderId: "329799362596",
+  appId: "1:329799362596:web:d6280c3b583e3ad90150b1",
+  measurementId: "G-8859CZBRF9"
+};
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const analytics = firebase.analytics();
+  </script>
+</body>
+</html>
